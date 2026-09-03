@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Resident {
+  id                 String   @id @default(uuid())
+  nameEn             String
+  nameTa             String
+  dob                String
+  gender             String
+  bloodGroup         String
+  room               String
+  block              String
+  medicalConditions  String
+  allergies          String
+  currentMedications String
+  avatarUrl          String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  alerts         EmergencyAlert[]
+  complaints     Complaint[]
+  services       ServiceRequest[]
+  counsellings   CounsellingRequest[]
+}
+
+model EmergencyAlert {
+  id             String   @id @default(uuid())
+  residentId     String
+  resident       Resident @relation(fields: [residentId], references: [id])
+  type           String   @default("sos") // 'sos' | 'medical' | 'staff'
+  status         String   @default("ACTIVE") // 'ACTIVE' | 'CANCELLED' | 'ACKNOWLEDGED'
+  location       String
+  medicalSummary String
+  sharedWith     String   @default("Staff, Doctor, Family")
+  sharedCount    String   @default("3/5")
+  createdAt      DateTime @default(now())
+  cancelledAt    DateTime?
+
+  acknowledgements StaffAcknowledgement[]
+}
+
+model StaffAcknowledgement {
+  id             String         @id @default(uuid())
+  alertId        String
+  alert          EmergencyAlert @relation(fields: [alertId], references: [id])
+  staffNameEn    String
+  staffNameTa    String
+  roleEn         String
+  roleTa         String
+  acknowledgedAt DateTime       @default(now())
+}
+
+model Complaint {
+  id            String   @id @default(uuid())
+  residentId    String
+  resident      Resident @relation(fields: [residentId], references: [id])
+  categoryKey   String   // 'room' | 'food' | 'maintenance' | 'staff' | 'health' | 'other'
+  titleEn       String
+  titleTa       String
+  descriptionEn String
+  descriptionTa String
+  photoUrl      String?
+  status        String   @default("in_progress") // 'open' | 'in_progress' | 'resolved'
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Activity {
+  id         String   @id @default(uuid())
+  titleEn    String
+  titleTa    String
+  time       String
+  locationEn String
+  locationTa String
+  category   String
+  date       String
+  createdAt  DateTime @default(now())
+}
+
+model ServiceRequest {
+  id          String   @id @default(uuid())
+  residentId  String
+  resident    Resident @relation(fields: [residentId], references: [id])
+  serviceType String   // 'housekeeping' | 'laundry' | 'meal' | 'transport' | 'visitor' | 'general'
+  status      String   @default("PENDING") // 'PENDING' | 'ASSIGNED' | 'COMPLETED'
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model CounsellingRequest {
+  id          String   @id @default(uuid())
+  residentId  String
+  resident    Resident @relation(fields: [residentId], references: [id])
+  categoryKey String   // 'pension' | 'legal' | 'schemes' | 'medical'
+  status      String   @default("PENDING") // 'PENDING' | 'SCHEDULED' | 'COMPLETED'
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model CommunityBirthday {
+  id       String @id @default(uuid())
+  nameEn   String
+  nameTa   String
+  date     String
+  role     String @default("Resident")
+  photoUrl String
+}
+
+model GalleryItem {
+  id       String @id @default(uuid())
+  titleEn  String
+  titleTa  String
+  photoUrl String
+}
