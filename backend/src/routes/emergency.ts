@@ -13,7 +13,7 @@ emergencyRouter.get('/active', async (req, res) => {
       include: { acknowledgements: true, resident: true },
       orderBy: { createdAt: 'desc' }
     });
-    return res.json({ success: true, data: activeAlert });
+    return res.json({ success: true, data: activeAlert || null });
   } catch (error) {
     console.error('Error getting active emergency:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -23,68 +23,62 @@ emergencyRouter.get('/active', async (req, res) => {
 // POST /api/emergency/alert
 emergencyRouter.post('/alert', async (req, res) => {
   try {
-    const { type = 'sos' } = req.body;
-    const resident = await prisma.resident.findFirst();
+    const { type = 'sos', residentName, room, block, medicalConditions } = req.body;
+    let resident = await prisma.resident.findFirst({
+      orderBy: { createdAt: 'desc' }
+    });
 
     if (!resident) {
-      return res.status(404).json({ error: 'Resident not found' });
+      resident = await prisma.resident.create({
+        data: {
+          nameEn: residentName || 'Resident',
+          nameTa: residentName || 'குடியிருப்பாளர்',
+          dob: '',
+          gender: '',
+          bloodGroup: '',
+          room: room || 'Room 203',
+          block: block || 'Block A',
+          medicalConditions: medicalConditions || '',
+          allergies: '',
+          currentMedications: '',
+          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+        }
+      });
     }
+
+    const loc = `${resident.room || room || 'Room 203'}, ${resident.block || block || 'Lotus Block'}`;
+    const medSummary = resident.medicalConditions || medicalConditions || 'None specified';
 
     const alert = await prisma.emergencyAlert.create({
       data: {
         residentId: resident.id,
         type,
         status: 'ACTIVE',
-        location: `${resident.room}, ${resident.block}`,
-        medicalSummary: resident.medicalConditions,
+        location: loc,
+        medicalSummary: medSummary,
         sharedWith: 'Staff, Doctor, Family',
         sharedCount: '3/5'
       },
-      include: { resident: true }
-    });
-
-    // Seed immediate acknowledgements simulation (Nurse & Doctor)
-    await prisma.staffAcknowledgement.createMany({
-      data: [
-        {
-          alertId: alert.id,
-          staffNameEn: 'Nurse Kavita',
-          staffNameTa: 'நர்ஸ் கவிதா',
-          roleEn: 'Duty Nurse',
-          roleTa: 'பணி செவிலியர்'
-        },
-        {
-          alertId: alert.id,
-          staffNameEn: 'Duty Doctor',
-          staffNameTa: 'டியூட்டி மருத்துவர்',
-          roleEn: 'Resident Physician',
-          roleTa: 'மருத்துவர்'
-        }
-      ]
-    });
-
-    const fullAlert = await prisma.emergencyAlert.findUnique({
-      where: { id: alert.id },
       include: { acknowledgements: true, resident: true }
     });
 
-    // Format WhatsApp & SMS dispatch payloads
+    // Format WhatsApp & SMS dispatch payloads based on user's real input
     const whatsappNotification = NotificationService.formatWhatsAppPayload({
-      room: resident.room,
-      residentNameEn: resident.nameEn,
-      residentNameTa: resident.nameTa,
-      medicalInfo: resident.medicalConditions,
-      location: `${resident.room}, ${resident.block}`
+      room: resident.room || 'Room 203',
+      residentNameEn: resident.nameEn || 'Resident',
+      residentNameTa: resident.nameTa || 'குடியிருப்பாளர்',
+      medicalInfo: medSummary,
+      location: loc
     });
 
     const smsNotification = NotificationService.formatSmsPayload({
-      room: resident.room,
-      residentNameEn: resident.nameEn
+      room: resident.room || 'Room 203',
+      residentNameEn: resident.nameEn || 'Resident'
     });
 
     // Real-time broadcast over WebSocket
     socketService.broadcast('EMERGENCY_ALERT_TRIGGERED', {
-      alert: fullAlert,
+      alert,
       notifications: {
         whatsapp: whatsappNotification,
         sms: smsNotification
@@ -93,7 +87,7 @@ emergencyRouter.post('/alert', async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      data: fullAlert,
+      data: alert,
       notifications: {
         whatsapp: whatsappNotification,
         sms: smsNotification
@@ -135,8 +129,8 @@ emergencyRouter.post('/:id/acknowledge', async (req, res) => {
     const ack = await prisma.staffAcknowledgement.create({
       data: {
         alertId: id,
-        staffNameEn: staffNameEn || 'Care Staff',
-        staffNameTa: staffNameTa || 'பராமரிப்பாளர்',
+        staffNameEn: staffNameEn || 'Duty Staff',
+        staffNameTa: staffNameTa || 'பணி ஊழியர்',
         roleEn: roleEn || 'Staff',
         roleTa: roleTa || 'ஊழியர்'
       }

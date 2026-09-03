@@ -82,8 +82,25 @@ export const ComplaintStatus: React.FC = () => {
       {/* Complaints List */}
       <div className="flex-1 p-3.5 space-y-3 overflow-y-auto">
         {filteredComplaints.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
-            <p className="text-xs">No complaints under this filter.</p>
+          <div className="text-center py-14 px-4 space-y-3">
+            <div className="w-12 h-12 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto text-teal-700">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-slate-700">
+              {language === 'ta' ? 'புகார்கள் எதுவும் இல்லை' : 'No complaints registered'}
+            </p>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto">
+              {language === 'ta'
+                ? 'புதிய புகாரை பதிவு செய்ய கீழே உள்ள பொத்தானை அழுத்தவும்.'
+                : 'All clear! Tap below if you need any facility, meal, or maintenance assistance.'}
+            </p>
+            <button
+              onClick={() => setCurrentScreen(6)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold shadow-xs transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{language === 'ta' ? 'புதிய புகார் பதிவு' : 'Raise New Complaint'}</span>
+            </button>
           </div>
         ) : (
           filteredComplaints.map(item => {

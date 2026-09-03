@@ -222,7 +222,7 @@ export const MobileShell: React.FC = () => {
               <BottomNav />
 
               {/* iOS Home Indicator Bar */}
-              <div className="h-4 bg-white flex items-center justify-center flex-shrink-0 z-40">
+              <div className="h-4 bg-white pointer-events-none flex items-center justify-center flex-shrink-0 z-10">
                 <div className="w-28 h-1 bg-slate-300 rounded-full" />
               </div>
             </div>

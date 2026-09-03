@@ -63,6 +63,7 @@ export const AddResidentProfile: React.FC = () => {
             </label>
             <input
               type="text"
+              placeholder={language === 'ta' ? 'உதாரணம்: சாந்தா / ராமசாமி' : 'e.g., Sundaram R / Shanti Devi'}
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 bg-white"
@@ -78,6 +79,7 @@ export const AddResidentProfile: React.FC = () => {
               </label>
               <input
                 type="text"
+                placeholder="e.g. 15 Aug 1950"
                 value={formData.dob}
                 onChange={e => setFormData({ ...formData, dob: e.target.value })}
                 className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 bg-white"
@@ -118,7 +120,39 @@ export const AddResidentProfile: React.FC = () => {
               <option value="AB+">AB+</option>
               <option value="B-">B-</option>
               <option value="O-">O-</option>
+              <option value="A-">A-</option>
+              <option value="AB-">AB-</option>
             </select>
+          </div>
+
+          {/* Room & Block Row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                {language === 'ta' ? 'அறை எண்' : 'Room Number'}
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Room 203"
+                value={formData.room}
+                onChange={e => setFormData({ ...formData, room: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 bg-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                {language === 'ta' ? 'வளாகம் / பிரிவு' : 'Block / Wing'}
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Lotus Block"
+                value={formData.block}
+                onChange={e => setFormData({ ...formData, block: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 bg-white"
+                required
+              />
+            </div>
           </div>
         </div>
 
@@ -135,6 +169,7 @@ export const AddResidentProfile: React.FC = () => {
             </label>
             <input
               type="text"
+              placeholder={language === 'ta' ? 'உயர் இரத்த அழுத்தம், மூட்டு வலி...' : 'e.g. Hypertension, Arthritis'}
               value={formData.medicalConditions}
               onChange={e => setFormData({ ...formData, medicalConditions: e.target.value })}
               className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 bg-white"
@@ -148,6 +183,7 @@ export const AddResidentProfile: React.FC = () => {
             </label>
             <input
               type="text"
+              placeholder={language === 'ta' ? 'எதுவும் இல்லை / பென்சிலின்' : 'e.g. None, Penicillin, Peanuts'}
               value={formData.allergies}
               onChange={e => setFormData({ ...formData, allergies: e.target.value })}
               className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 bg-white"
@@ -161,6 +197,7 @@ export const AddResidentProfile: React.FC = () => {
             </label>
             <textarea
               rows={2}
+              placeholder={language === 'ta' ? 'Amlodipine 5mg (காலை)...' : 'e.g. Amlodipine 5mg morning, Calcium at night'}
               value={formData.currentMedications}
               onChange={e => setFormData({ ...formData, currentMedications: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 focus:border-teal-600 bg-white"

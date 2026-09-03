@@ -12,90 +12,34 @@ interface AppContextType {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
   profile: ResidentProfile;
-  updateProfile: (data: Partial<ResidentProfile>) => void;
+  updateProfile: (data: Partial<ResidentProfile>) => Promise<void>;
   complaints: Complaint[];
-  addComplaint: (data: Omit<Complaint, 'id' | 'date' | 'status'>) => void;
+  addComplaint: (data: Omit<Complaint, 'id' | 'date' | 'status'>) => Promise<void>;
   updateComplaintStatus: (id: string, status: 'open' | 'in_progress' | 'resolved') => Promise<void>;
   alertActive: boolean;
   alertType: 'sos' | 'medical' | 'staff';
   activeAlertId: string | null;
-  triggerEmergencyAlert: (type?: 'sos' | 'medical' | 'staff') => void;
-  cancelEmergencyAlert: () => void;
+  triggerEmergencyAlert: (type?: 'sos' | 'medical' | 'staff') => Promise<void>;
+  cancelEmergencyAlert: () => Promise<void>;
   isMobileFrame: boolean;
   setIsMobileFrame: (val: boolean) => void;
   isBackendConnected: boolean;
   t: typeof translations['en'];
 }
 
-const defaultProfileEn: ResidentProfile = {
-  name: 'Shanti Devi',
-  dob: '15 Aug 1950',
+// Clean empty profile - everything works based on user input
+const emptyProfile: ResidentProfile = {
+  name: '',
+  dob: '',
   gender: 'Female',
   bloodGroup: 'B+',
-  medicalConditions: 'Hypertension, Arthritis',
-  allergies: 'None',
-  currentMedications: 'Amlodipine 5mg (Morning), Calcium Tablet (Night)',
-  room: 'Room 203',
-  block: 'Lotus Block',
-  avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80'
+  medicalConditions: '',
+  allergies: '',
+  currentMedications: '',
+  room: '',
+  block: '',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
 };
-
-const defaultProfileTa: ResidentProfile = {
-  name: 'சண்முகம்',
-  dob: '15 ஆக., 1950',
-  gender: 'ஆண்',
-  bloodGroup: 'B+',
-  medicalConditions: 'உயர் இரத்த அழுத்தம், சர்க்கரை',
-  allergies: 'எதுவும் இல்லை',
-  currentMedications: 'Amlodipine 5mg (காலை), Metformin 500mg (இரவு)',
-  room: 'அறை 203',
-  block: 'தாமரை மாடி',
-  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
-};
-
-const initialComplaints: Complaint[] = [
-  {
-    id: 'C-101',
-    categoryKey: 'room',
-    titleEn: 'Bathroom tap leaking',
-    titleTa: 'கழிவறை தண்ணீர் கசிகிறது',
-    date: '20 May 2024, 09:15 AM',
-    status: 'in_progress',
-    descriptionEn: 'The bathroom tap is leaking since yesterday.',
-    descriptionTa: 'கழிவறை தண்ணீர் கசிகிறது.',
-    photoUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=150&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'C-102',
-    categoryKey: 'maintenance',
-    titleEn: 'Fan not working',
-    titleTa: 'ஃபேன் இயங்கவில்லை',
-    date: '18 May 2024, 11:30 AM',
-    status: 'resolved',
-    descriptionEn: 'Ceiling fan makes noise and does not rotate.',
-    descriptionTa: 'ஃபேன் சுற்றவில்லை மற்றும் சத்தம் வருகிறது.'
-  },
-  {
-    id: 'C-103',
-    categoryKey: 'food',
-    titleEn: 'Food is too salty',
-    titleTa: 'உணவு உப்பு அதிகம்',
-    date: '15 May 2024, 01:45 PM',
-    status: 'resolved',
-    descriptionEn: 'Lunch sambar had excess salt.',
-    descriptionTa: 'மதிய உணவில் உப்பு அதிகமாக இருந்தது.'
-  },
-  {
-    id: 'C-104',
-    categoryKey: 'room',
-    titleEn: 'Bed side light not working',
-    titleTa: 'படுக்கை விளக்கு எரியவில்லை',
-    date: '10 May 2024, 04:20 PM',
-    status: 'resolved',
-    descriptionEn: 'Reading light bulb needs replacement.',
-    descriptionTa: 'படுக்கை அருகில் உள்ள விளக்கு எரியவில்லை.'
-  }
-];
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -107,8 +51,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [alertActive, setAlertActive] = useState<boolean>(false);
   const [alertType, setAlertType] = useState<'sos' | 'medical' | 'staff'>('sos');
   const [activeAlertId, setActiveAlertId] = useState<string | null>(null);
-  const [complaints, setComplaints] = useState<Complaint[]>(initialComplaints);
-  const [profile, setProfile] = useState<ResidentProfile>(defaultProfileEn);
+  
+  // Clean initial state - strictly driven by user input
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [profile, setProfile] = useState<ResidentProfile>(emptyProfile);
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
 
   // Sync with PostgreSQL backend on mount
@@ -122,41 +68,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (isHealthy) {
         console.log('[SeniorSphere] PostgreSQL backend detected on port 5001. Syncing state...');
-        // 1. Fetch profile from PostgreSQL
+        
+        // 1. Fetch user-entered profile from PostgreSQL
         const backendProfile = await api.getProfile();
-        if (backendProfile && mounted) {
-          if (language === 'ta') {
-            setProfile({
-              name: backendProfile.nameTa || defaultProfileTa.name,
-              dob: backendProfile.dob,
-              gender: backendProfile.gender,
-              bloodGroup: backendProfile.bloodGroup,
-              medicalConditions: backendProfile.medicalConditions,
-              allergies: backendProfile.allergies,
-              currentMedications: backendProfile.currentMedications,
-              room: backendProfile.room,
-              block: backendProfile.block,
-              avatarUrl: backendProfile.avatarUrl || defaultProfileTa.avatarUrl
-            });
-          } else {
-            setProfile({
-              name: backendProfile.nameEn || defaultProfileEn.name,
-              dob: backendProfile.dob,
-              gender: backendProfile.gender,
-              bloodGroup: backendProfile.bloodGroup,
-              medicalConditions: backendProfile.medicalConditions,
-              allergies: backendProfile.allergies,
-              currentMedications: backendProfile.currentMedications,
-              room: backendProfile.room,
-              block: backendProfile.block,
-              avatarUrl: backendProfile.avatarUrl || defaultProfileEn.avatarUrl
-            });
-          }
+        if (backendProfile && backendProfile.nameEn && mounted) {
+          setProfile({
+            name: language === 'ta' && backendProfile.nameTa ? backendProfile.nameTa : backendProfile.nameEn,
+            dob: backendProfile.dob || '',
+            gender: backendProfile.gender || '',
+            bloodGroup: backendProfile.bloodGroup || 'B+',
+            medicalConditions: backendProfile.medicalConditions || '',
+            allergies: backendProfile.allergies || '',
+            currentMedications: backendProfile.currentMedications || '',
+            room: backendProfile.room || '',
+            block: backendProfile.block || '',
+            avatarUrl: backendProfile.avatarUrl || emptyProfile.avatarUrl
+          });
         }
 
-        // 2. Fetch complaints from PostgreSQL
+        // 2. Fetch user-created complaints from PostgreSQL
         const backendComplaints = await api.getComplaints();
-        if (backendComplaints && backendComplaints.length > 0 && mounted) {
+        if (backendComplaints && mounted) {
           const mapped: Complaint[] = backendComplaints.map((c: any) => ({
             id: c.id,
             categoryKey: c.categoryKey,
@@ -199,39 +131,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang);
-    if (lang === 'ta') {
-      setProfile(prev => ({
-        ...defaultProfileTa,
-        avatarUrl: prev.avatarUrl
-      }));
-    } else {
-      setProfile(prev => ({
-        ...defaultProfileEn,
-        avatarUrl: prev.avatarUrl
-      }));
-    }
   };
 
   const toggleLanguage = () => {
     handleSetLanguage(language === 'en' ? 'ta' : 'en');
   };
 
+  // Update profile from user form input and persist to PostgreSQL
   const updateProfile = async (data: Partial<ResidentProfile>) => {
     setProfile(prev => ({ ...prev, ...data }));
-    // Persist to PostgreSQL backend
+    
     await api.updateProfile({
-      ...(language === 'ta' ? { nameTa: data.name } : { nameEn: data.name }),
-      dob: data.dob,
-      gender: data.gender,
-      bloodGroup: data.bloodGroup,
-      medicalConditions: data.medicalConditions,
-      allergies: data.allergies,
-      currentMedications: data.currentMedications,
-      room: data.room,
-      block: data.block
+      nameEn: data.name || profile.name,
+      nameTa: language === 'ta' ? data.name : profile.name,
+      dob: data.dob !== undefined ? data.dob : profile.dob,
+      gender: data.gender !== undefined ? data.gender : profile.gender,
+      bloodGroup: data.bloodGroup !== undefined ? data.bloodGroup : profile.bloodGroup,
+      medicalConditions: data.medicalConditions !== undefined ? data.medicalConditions : profile.medicalConditions,
+      allergies: data.allergies !== undefined ? data.allergies : profile.allergies,
+      currentMedications: data.currentMedications !== undefined ? data.currentMedications : profile.currentMedications,
+      room: data.room !== undefined ? data.room : profile.room,
+      block: data.block !== undefined ? data.block : profile.block
     });
   };
 
+  // Add complaint from user form input and persist to PostgreSQL
   const addComplaint = async (data: Omit<Complaint, 'id' | 'date' | 'status'>) => {
     const tempId = `C-${Date.now().toString().slice(-3)}`;
     const newComplaint: Complaint = {
@@ -255,28 +179,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Toggle or update complaint status in PostgreSQL
   const updateComplaintStatus = async (id: string, status: 'open' | 'in_progress' | 'resolved') => {
     setComplaints(prev => prev.map(c => c.id === id ? { ...c, status } : c));
     await api.updateComplaintStatus(id, status);
   };
 
+  // Trigger emergency alert with current user details
   const triggerEmergencyAlert = async (type: 'sos' | 'medical' | 'staff' = 'sos') => {
     setAlertType(type);
     setAlertActive(true);
     setCurrentScreen(4); // Move directly to Screen 4 (Alert in Progress)
 
-    // Trigger backend PostgreSQL & WebSocket SOS
     const response = await api.triggerAlert(type);
     if (response && response.data) {
       setActiveAlertId(response.data.id);
     }
   };
 
+  // Cancel emergency alert
   const cancelEmergencyAlert = async () => {
     setAlertActive(false);
     setCurrentScreen(3); // Return to Emergency Alert screen
 
-    // Cancel in PostgreSQL backend
     if (activeAlertId) {
       await api.cancelAlert(activeAlertId);
       setActiveAlertId(null);
