@@ -12,6 +12,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 
 export const Services: React.FC = () => {
   const { t, setCurrentScreen } = useApp();
@@ -26,11 +27,12 @@ export const Services: React.FC = () => {
     general: Info
   };
 
-  const handleServiceClick = (item: { id: string; title: string }) => {
+  const handleServiceClick = async (item: { id: string; title: string }) => {
     setActiveRequestToast(item.title);
+    await api.requestService(item.id, item.title);
     setTimeout(() => {
       setActiveRequestToast(null);
-    }, 2000);
+    }, 2500);
   };
 
   return (

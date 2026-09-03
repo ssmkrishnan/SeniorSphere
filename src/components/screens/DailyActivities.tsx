@@ -1,9 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Sparkles, HeartPulse, Trophy, Film, Activity as YogaIcon } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 
 export const DailyActivities: React.FC = () => {
   const { t, language } = useApp();
+  const [activitiesList, setActivitiesList] = useState(t.activities.items);
+
+  useEffect(() => {
+    async function loadActivities() {
+      const data = await api.getTodayActivities();
+      if (data && data.length > 0) {
+        setActivitiesList(data.map((item: any) => ({
+          time: item.time,
+          title: language === 'ta' ? item.titleTa : item.titleEn,
+          location: language === 'ta' ? item.locationTa : item.locationEn,
+          category: item.category
+        })));
+      } else {
+        setActivitiesList(t.activities.items);
+      }
+    }
+    loadActivities();
+  }, [language]);
 
   const activityIcons = [
     { icon: YogaIcon, color: 'text-teal-600 bg-teal-50 border-teal-200' },
@@ -28,7 +47,7 @@ export const DailyActivities: React.FC = () => {
 
       {/* Activities Timeline */}
       <div className="flex-1 p-4 pb-8 space-y-3 overflow-y-auto">
-        {t.activities.items.map((item, index) => {
+        {activitiesList.map((item, index) => {
           const iconMeta = activityIcons[index % activityIcons.length];
           const Icon = iconMeta.icon;
 

@@ -15,6 +15,7 @@ interface AppContextType {
   updateProfile: (data: Partial<ResidentProfile>) => void;
   complaints: Complaint[];
   addComplaint: (data: Omit<Complaint, 'id' | 'date' | 'status'>) => void;
+  updateComplaintStatus: (id: string, status: 'open' | 'in_progress' | 'resolved') => Promise<void>;
   alertActive: boolean;
   alertType: 'sos' | 'medical' | 'staff';
   activeAlertId: string | null;
@@ -254,6 +255,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateComplaintStatus = async (id: string, status: 'open' | 'in_progress' | 'resolved') => {
+    setComplaints(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+    await api.updateComplaintStatus(id, status);
+  };
+
   const triggerEmergencyAlert = async (type: 'sos' | 'medical' | 'staff' = 'sos') => {
     setAlertType(type);
     setAlertActive(true);
@@ -293,6 +299,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateProfile,
         complaints,
         addComplaint,
+        updateComplaintStatus,
         alertActive,
         alertType,
         activeAlertId,

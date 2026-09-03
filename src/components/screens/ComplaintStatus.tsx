@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import type { ComplaintStatus as ComplaintStatusType } from '../../types';
 
 export const ComplaintStatus: React.FC = () => {
-  const { t, language, complaints, setCurrentScreen } = useApp();
+  const { t, language, complaints, updateComplaintStatus, setCurrentScreen } = useApp();
   const [filter, setFilter] = useState<'all' | ComplaintStatusType>('all');
 
   const filteredComplaints = complaints.filter(item => {
@@ -102,10 +102,14 @@ export const ComplaintStatus: React.FC = () => {
                     {title}
                   </h3>
                   {isInProgress && (
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md flex-shrink-0">
+                    <button
+                      onClick={() => updateComplaintStatus(item.id, 'resolved')}
+                      title="Click to mark as resolved"
+                      className="flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-md flex-shrink-0 transition-colors"
+                    >
                       <Clock className="w-3 h-3 text-amber-600" />
                       {t.complaintStatus.statusText.inProgress}
-                    </span>
+                    </button>
                   )}
                   {isResolved && (
                     <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md flex-shrink-0">

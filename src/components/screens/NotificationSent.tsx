@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, CheckCheck, Clock, MapPin, HeartPulse, Users, ShieldCheck, MessageCircle, Smartphone } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 
 export const NotificationSent: React.FC = () => {
   const { t, language, profile, setCurrentScreen } = useApp();
   const [activeChannel, setActiveChannel] = useState<'whatsapp' | 'sms'>('whatsapp');
+  const [activeAlert, setActiveAlert] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadAlert() {
+      const data = await api.getActiveAlert();
+      if (data) {
+        setActiveAlert(data);
+      }
+    }
+    loadAlert();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-full bg-slate-100">

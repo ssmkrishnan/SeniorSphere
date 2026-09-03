@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Gift, Image as ImageIcon, Heart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 
 export const MyCommunity: React.FC = () => {
   const { t, language } = useApp();
   const [activeTab, setActiveTab] = useState<'residents' | 'staff' | 'family'>('residents');
-
-  const galleryImages = [
+  const [birthdays, setBirthdays] = useState(t.community.birthdays);
+  const [galleryList, setGalleryList] = useState<Array<{ url: string; title: string }>>([
     {
       url: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=300&auto=format&fit=crop&q=80',
       title: language === 'ta' ? 'காலை நடைப்பயிற்சி' : 'Morning Stroll'
@@ -23,7 +24,28 @@ export const MyCommunity: React.FC = () => {
       url: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=300&auto=format&fit=crop&q=80',
       title: language === 'ta' ? 'பண்டிகை கொண்டாட்டம்' : 'Festival Gathering'
     }
-  ];
+  ]);
+
+  useEffect(() => {
+    async function loadCommunityData() {
+      const bdays = await api.getBirthdays();
+      if (bdays && bdays.length > 0) {
+        setBirthdays(bdays.map((b: any) => ({
+          name: language === 'ta' ? b.nameTa : b.nameEn,
+          date: b.date
+        })));
+      }
+
+      const gal = await api.getGallery();
+      if (gal && gal.length > 0) {
+        setGalleryList(gal.map((g: any) => ({
+          url: g.photoUrl,
+          title: language === 'ta' ? g.titleTa : g.titleEn
+        })));
+      }
+    }
+    loadCommunityData();
+  }, [language]);
 
   return (
     <div className="flex flex-col min-h-full bg-slate-50">
@@ -84,7 +106,7 @@ export const MyCommunity: React.FC = () => {
           </div>
 
           <div className="space-y-2.5">
-            {t.community.birthdays.map((person, idx) => (
+            {birthdays.map((person, idx) => (
               <div
                 key={idx}
                 className="bg-white rounded-2xl p-3 border border-slate-200 shadow-xs flex items-center justify-between hover:border-teal-300 transition-colors"
@@ -131,7 +153,7 @@ export const MyCommunity: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {galleryImages.map((img, i) => (
+            {galleryList.map((img, i) => (
               <div
                 key={i}
                 className="group relative aspect-4/3 rounded-2xl overflow-hidden shadow-xs border border-slate-200/80 cursor-pointer"

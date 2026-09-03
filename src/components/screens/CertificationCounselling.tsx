@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Landmark, Scale, FileText, HeartHandshake, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 
 export const CertificationCounselling: React.FC = () => {
   const { t, setCurrentScreen } = useApp();
@@ -21,8 +22,9 @@ export const CertificationCounselling: React.FC = () => {
     medical: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-600' }
   };
 
-  const handleRequest = () => {
+  const handleRequest = async () => {
     setSubmitted(true);
+    await api.requestCounselling(selectedItem);
     setTimeout(() => {
       setSubmitted(false);
       setCurrentScreen(11); // Navigate to Services

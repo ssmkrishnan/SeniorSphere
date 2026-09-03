@@ -10,6 +10,7 @@ import { complaintsRouter } from './routes/complaints.js';
 import { activitiesRouter } from './routes/activities.js';
 import { servicesRouter } from './routes/services.js';
 import { communityRouter } from './routes/community.js';
+import { entertainmentRouter } from './routes/entertainment.js';
 dotenv.config();
 const app = express();
 const server = createServer(app);
@@ -36,6 +37,7 @@ app.use('/api/complaints', complaintsRouter);
 app.use('/api/activities', activitiesRouter);
 app.use('/api/services', servicesRouter);
 app.use('/api/community', communityRouter);
+app.use('/api/entertainment', entertainmentRouter);
 // Start Server
 server.listen(PORT, () => {
     console.log(`[SeniorSphere Backend] HTTP & WebSocket Server running on port ${PORT}`);
