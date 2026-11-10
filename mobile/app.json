@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "SeniorSphere",
+    "slug": "seniorsphere",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d9488"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.seniorsphere.app"
+    },
+    "android": {
+      "package": "com.seniorsphere.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d9488"
+      },
+      "permissions": [
+        "ACCESS_NETWORK_STATE",
+        "INTERNET",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-haptics"
+    ],
+    "extra": {
+      "apiUrl": "http://10.0.2.2:5001/api",
+      "wsUrl": "ws://10.0.2.2:5001/ws",
+      "eas": {
+        "projectId": ""
+      }
+    }
+  }
+}
